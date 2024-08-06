@@ -1,132 +1,202 @@
-const ChatSchema = require("../models/chats")
-const { Op, where,} = require("sequelize");
+const ChatSchema = require("../models/chats");
+const { Op, where } = require("sequelize");
 const User = require("../models/users");
+const Group = require("../models/group");
+const GroupChats = require("../models/groupChats");
+const GroupMember = require("../models/groupMembers");
 
-exports.getUserDataForChat = async (req, res)=>{
+exports.getUserDataForChat = async (req, res) => {
+  const { userName } = req.params;
 
-    const {userName} = req.params;
+  try {
+    if (userName === "all") {
+      const userDta = await User.findAll({
+        attributes: ["id", "userName", "imageUrl"],
+      });
 
-    try{
-
-        if(userName === "all"){
-            const userDta = await User.findAll({
-                attributes:["id","userName","imageUrl"]
-            });
-
-            return res.status(200).json({
-                success:true,
-                message:"data fetched successfully",
-                result:userDta,
-            })
-        }else{
-            const userDta = await User.findAll({
-                where:{
-                    [Op.or]:[{
-                  userName:{
-                      [Op.like]: `%${userName}%`
-                    }
-                },]
+      return res.status(200).json({
+        success: true,
+        message: "data fetched successfully",
+        result: userDta,
+      });
+    } else {
+      const userDta = await User.findAll({
+        where: {
+          [Op.or]: [
+            {
+              userName: {
+                [Op.like]: `%${userName}%`,
+              },
             },
-            attributes:["id","userName","imageUrl"]
-        });
-        
-        return res.status(200).json({
-            success:true,
-            message:"data fetched successfully",
-            result:userDta,
-        })
+          ],
+        },
+        attributes: ["id", "userName", "imageUrl"],
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "data fetched successfully",
+        result: userDta,
+      });
     }
+  } catch (err) {
+    return res.status(500).json({
+      success: true,
+      message: err.message,
+    });
+  }
+};
 
-    }catch(err){
-        return res.status(500).json({
-            success:true,
-            message:err.message,
-        })
-    }
-}
+exports.getUserDataForChatById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await User.findAll({
+      where: {
+        id,
+      },
+      attributes: ["id", "userName", "imageUrl"],
+    });
 
-exports.getUserDataForChatById = async (req, res)=>{
-    const {id} = req.params;
-    try{
-        const result = await User.findAll({
-            where:{
-                id
-            },
-            attributes:["id","userName","imageUrl"]
-        });
+    return res.status(200).json({
+      success: true,
+      message: "data fetched successfully",
+      result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
-
-        return res.status(200).json({
-            success:true,
-            message:"data fetched successfully",
-            result
-        })
-
-    }catch(err){
-        return res.status(500).json({
-            success:false,
-            message:err.message,
-        })
-    }
-}
-
-exports.createChat = async (req, res) =>{
-    try{
-
-    const {userId, chat, fileUrl, receiverId} = req.body;
+exports.createChat = async (req, res) => {
+  try {
+    const { userId, chat, fileUrl, receiverId } = req.body;
 
     await ChatSchema.create({
-        userId,
-        chat,
-        imageUrl:fileUrl,
-        receiverId
-    })
+      userId,
+      chat,
+      imageUrl: fileUrl,
+      receiverId,
+    });
 
     return res.status(200).json({
-        success:true,
-        message:"Chats saved success",
-    })
+      success: true,
+      message: "Chats saved success",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: true,
+      message: err.message,
+    });
+  }
+};
 
-    }catch(err){
-        return res.status(500).json({
-            success:true,
-            message:err.message,
-        })
+exports.receiveChats = async (req, res) => {
+  try {
+    const { userId, receiverId } = req.params;
+
+    if (!receiverId || !userId) {
+      return res.status(500).json({
+        success: false,
+        message: "all fields are required",
+      });
     }
-
-}
-
-exports.receiveChats = async (req, res) =>{
-    try{
-    const {userId, receiverId} = req.params;
-
-    if(!receiverId || !userId){
-        return res.status(500).json({
-            success:false,
-            message:"all fields are required"
-        })
-    }
-
 
     const mychats = await ChatSchema.findAll({
-        where: {
-            [Op.or]: [
-                { userId: userId, receiverId: receiverId },
-                { userId: receiverId, receiverId: userId }
-            ]
-        }
-    })
+      where: {
+        [Op.or]: [
+          { userId: userId, receiverId: receiverId },
+          { userId: receiverId, receiverId: userId },
+        ],
+      },
+    });
     return res.status(200).json({
-        success:true,
-        message:"Data fetched successfully",
-        result:mychats
-    })
-    }catch(err){
-        return res.status(500).json({
-            success:true,
-            message:err.message,
-        })
+      success: true,
+      message: "Data fetched successfully",
+      result: mychats,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
-    }
+// ======================groups=====================
 
-}
+exports.createGroup = async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const group = await Group.create({
+      name,
+      imageUrl: `https://api.dicebear.com/5.x/initials/svg?seed=${name}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Data fetched successfully",
+      result: group,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.addGroupMember = async (req, res) => {
+  try {
+    const { groupId, userId } = req.body;
+    const groupMember = await GroupMember.create({ groupId, userId });
+    return res.status(200).json({
+      success: true,
+      message: "Data add successfully",
+      result: groupMember,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+exports.sendGroupMessage = async (req, res) => {
+  try {
+    const { groupId, message ,userId } = req.body;
+    const groupMessage = await GroupChats.create({ groupId, userId, message });
+    return res.status(200).json({
+      success: true,
+      message: "Data send successfully",
+      result: groupMessage,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+exports.getGroupMessages = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const messages = await GroupChats.findAll({
+      where: { groupId },
+    });
+    return res.status(200).json({
+        success: true,
+        message: "Data fetched successfully",
+        result: messages,
+      });
+  } catch (err) {
+    return res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+  }
+};
