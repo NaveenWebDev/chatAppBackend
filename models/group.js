@@ -10,6 +10,10 @@ const group = sequelize.define("group",{
         type: DataTypes.STRING,
         allowNull:false
       },
+    userId: {
+        type: DataTypes.STRING,
+        allowNull:false
+      },
   },
 );
 

@@ -29,7 +29,7 @@ router.post("/createChat", checkToken,  createChat)
 router.get("/receiveChats/userId=:userId/receiverId=:receiverId", checkToken, receiveChats)
 router.post("/imageUpload", checkToken, imageUpload)
 
-router.post('/createGroup/:name', checkToken, createGroup);
+router.post('/createGroup/:name/:userId', checkToken, createGroup);
 router.post('/addGroupMember', checkToken, addGroupMember);
 router.get('/receiveGroup', checkToken, receiveGroup);
 router.post('/sendGroupMessage', checkToken, sendGroupMessage);

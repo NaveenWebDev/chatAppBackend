@@ -129,17 +129,21 @@ exports.receiveChats = async (req, res) => {
 
 exports.createGroup = async (req, res) => {
   try {
-    const { name } = req.params;
+    const { name , userId  } = req.params;
 
     const group = await Group.create({
       name,
       imageUrl: `https://api.dicebear.com/5.x/initials/svg?seed=${name}`,
+      userId
     });
+
+    await GroupMember.create({ groupId: group.id, userId });
+
 
     return res.status(200).json({
       success: true,
       message: "Data fetched successfully",
-      result: group,
+      result: group.id,
     });
   } catch (err) {
     return res.status(500).json({
@@ -190,7 +194,7 @@ exports.getGroupDataForChatById = async (req, res) => {
       where: {
         id,
       },
-      attributes: ["id", "name", "imageUrl"],
+      // attributes: ["id", "name", "imageUrl","userId"],
     });
 
     return res.status(200).json({
