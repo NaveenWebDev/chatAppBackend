@@ -14,6 +14,10 @@ const groupMessage = sequelize.define('groupMessage', {
       type: DataTypes.TEXT,
       allowNull: false,
     },
+    userName: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
   }
 );
 

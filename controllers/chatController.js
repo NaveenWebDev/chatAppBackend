@@ -149,6 +149,24 @@ exports.createGroup = async (req, res) => {
   }
 };
 
+exports.receiveGroup = async (req, res) =>{
+  try{
+    const groups = await Group.findAll();
+
+    return res.status(200).json({
+      success: true,
+      message: "Data fetched successfully",
+      result: groups,
+    });
+
+  }catch(err){
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
 exports.addGroupMember = async (req, res) => {
   try {
     const { groupId, userId } = req.body;
@@ -165,16 +183,53 @@ exports.addGroupMember = async (req, res) => {
     });
   }
 };
+exports.getGroupDataForChatById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await Group.findAll({
+      where: {
+        id,
+      },
+      attributes: ["id", "name", "imageUrl"],
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "data fetched successfully",
+      result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 
 exports.sendGroupMessage = async (req, res) => {
   try {
-    const { groupId, message ,userId } = req.body;
-    const groupMessage = await GroupChats.create({ groupId, userId, message });
-    return res.status(200).json({
-      success: true,
-      message: "Data send successfully",
-      result: groupMessage,
+    const { groupId, message ,userId, userName } = req.body;
+
+    const member = await GroupMember.findOne({
+      where: {
+        groupId: groupId,
+        userId: userId
+      }
     });
+    if(member){
+      const groupMessage = await GroupChats.create({ groupId, userId, message, userName });
+      return res.status(200).json({
+        success: true,
+        message: "Data send successfully",
+        result: groupMessage,
+      });
+    }
+      return res.status(500).json({
+        success: false,
+        message: "sorry you can't send message on this group because you are not a member of this group",
+      });
+    
   } catch (err) {
     return res.status(500).json({
       success: false,

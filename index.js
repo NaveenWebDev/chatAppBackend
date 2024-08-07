@@ -28,6 +28,7 @@ app.use(fileupload({
     useTempFiles: true,
     tempFileDir: '/tmp/'
 }));
+
 app.use('/api/v1', router);
 
 io.on("connection", (socket) => {
@@ -35,13 +36,15 @@ io.on("connection", (socket) => {
 
     // Handle chat message
     socket.on("message", (data) => {
-        console.log(data);
         socket.broadcast.emit("message", data);
+    });
+    socket.on("groupMessage", (data) => {
+        socket.broadcast.emit("groupMessage", data);
     });
 
     socket.on('disconnect', () => {
         console.log('user disconnected');
-    });
+      });
 });
 
 // Port
